@@ -6,6 +6,6 @@ import org.springframework.web.bind.annotation.RestController;
 public class HomeController {
     @GetMapping("/")
     public String home() {
-        return "Hello World! This is the Clean Sweep Robotic Application.";
+        return "Hello SE-459! This is the Clean Sweep Robotic Application.";
     }
 }
