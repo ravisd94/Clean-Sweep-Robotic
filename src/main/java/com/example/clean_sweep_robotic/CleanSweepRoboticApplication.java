@@ -8,7 +8,7 @@ public class CleanSweepRoboticApplication {
 
     public static void main(String[] args) {
         SpringApplication.run(CleanSweepRoboticApplication.class, args);
-
+        
     }
 
 }

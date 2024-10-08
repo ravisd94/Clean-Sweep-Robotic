@@ -1,4 +1,4 @@
-package com.example.clean_sweep_robotic;
+package com.example.clean_sweep_robotic.controller;
 
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RestController;
