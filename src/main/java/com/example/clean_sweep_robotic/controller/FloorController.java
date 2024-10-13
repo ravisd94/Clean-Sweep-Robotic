@@ -11,7 +11,7 @@ public class FloorController {
     public String showFloor(Model model) {
         // Create a simple floor grid structure (2D array)
         String[][] floorGrid = {
-            {"vacuum", "empty", "furniture", "empty", "empty"},
+            {"empty", "empty", "furniture", "empty", "empty"},
             {"empty", "furniture", "furniture", "furniture", "empty"},
             {"empty", "empty", "empty", "empty", "empty"},
             {"furniture", "empty", "furniture", "empty", "furniture"},
@@ -22,5 +22,10 @@ public class FloorController {
         model.addAttribute("floorGrid", floorGrid);
 
         return "floor"; // Return the name of the Thymeleaf template
+    }
+
+        @GetMapping("/start-vacuum")
+    public String startVacuum(Model model) {
+        return "";
     }
 }

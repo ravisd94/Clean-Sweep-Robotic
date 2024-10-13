@@ -1,83 +1,254 @@
 <!DOCTYPE html>
-<html xmlns:th="http://www.thymeleaf.org">
+<html lang="en">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Floor Layout with Furniture</title>
+    <title>Vacuum Cleaner - Never Stops</title>
     <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css">
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css" integrity="sha384-k6RqeWeci5ZR/Lv4MR0sA0FfDOMp5T4jbb6s7F+1f0h6sJ2MRxROh19v66eYFMEK" crossorigin="anonymous">
     <style>
         body {
-            background-color: #f8f9fa; /* Light background color */
+            background-color: #f8f9fa;
         }
         h1 {
-            text-align: center; /* Center the header */
-            margin-top: 20px; /* Space above the header */
+            text-align: center;
+            margin-top: 20px;
         }
         .grid {
-            max-width: 500px; /* Set a max width for the grid */
-            margin: 20px auto; /* Center the grid */
+            max-width: 500px;
+            margin: 20px auto;
         }
         .table {
-            table-layout: fixed; /* Fixed table layout */
+            table-layout: fixed;
         }
         td {
-            width: 60px; /* Fixed width for cells */
-            height: 60px; /* Fixed height for cells */
-            vertical-align: middle; /* Center content vertically */
-            text-align: center; /* Center content horizontally */
-            background-color: white; /* Default background for empty spaces */
+            width: 60px;
+            height: 60px;
+            text-align: center;
+            background-color: white;
+            transition: background-color 0.3s;
         }
         .furniture {
-            background-color: red; /* Red for furniture */
-            color: white; /* White text for visibility */
+            background-color: red;
+            color: white;
         }
         .vacuum {
-            background-color: blue; /* Blue for vacuum cleaner */
-            color: white; /* White text for visibility */
+            background-color: blue;
+            color: white;
+        }
+        .cleaned {
+            background-color: green;
         }
         #startVacuumButton {
-            font-size: 0.75rem; /* Smaller font size for the button */
-            padding: 5px 10px; /* Adjust padding for a smaller button */
-            margin: 10px auto; /* Center the button */
-            display: block; /* Make it a block element to center */
+            display: block;
+            margin: 20px auto;
+        }
+        #stopVacuumButton {
+            display: block;
+            margin: 10px auto;
+            background-color: red;
+            color: white;
+        }
+        #cleanedCount {
+            text-align: center;
+            margin-top: 20px;
+            font-size: 20px;
+            font-weight: bold;
         }
     </style>
 </head>
 <body>
     <div class="container mt-4">
-        <h1>Floor Layout</h1>
-        <div class="text-center">
-            <button id="startVacuumButton" class="btn btn-primary" onclick="startVacuum()">Start Vacuum</button>
-        </div>
+        <h1>Vacuum Cleaner - Never Stops</h1>
+        <button id="startVacuumButton" class="btn btn-primary">Start Vacuum</button>
+        <button id="stopVacuumButton" class="btn btn-danger">Stop Vacuum</button>
         <div class="grid">
             <table class="table table-bordered">
                 <tbody>
-                    <tr th:each="row : ${floorGrid}">
-                        <td th:each="cell : ${row}" 
-                            th:class="${cell == 'furniture' ? 'furniture' : (cell == 'vacuum' ? 'vacuum' : '')}">
-                            <span th:if="${cell == 'furniture'}">Furniture</span>
-                            <span th:if="${cell == 'vacuum'}">
-                                <i class="fas fa-broom" style="font-size: 1.5em;"></i> <!-- Vacuum Cleaner Icon -->
-                            </span>
-                        </td>
+                    <tr>
+                        <td class="furniture">Furniture</td>
+                        <td></td>
+                        <td></td>
+                        <td class="furniture">Furniture</td>
+                        <td></td>
+                    </tr>
+                    <tr>
+                        <td></td>
+                        <td></td>
+                        <td></td>
+                        <td></td>
+                        <td></td>
+                    </tr>
+                    <tr>
+                        <td class="vacuum" id="vacuum"></td>
+                        <td></td>
+                        <td class="furniture">Furniture</td>
+                        <td></td>
+                        <td></td>
+                    </tr>
+                    <tr>
+                        <td></td>
+                        <td></td>
+                        <td></td>
+                        <td></td>
+                        <td></td>
+                    </tr>
+                    <tr>
+                        <td></td>
+                        <td></td>
+                        <td></td>
+                        <td></td>
+                        <td></td>
                     </tr>
                 </tbody>
             </table>
         </div>
+        <div id="cleanedCount">Cleaned Cells: 0</div>
     </div>
 
     <script>
-        function startVacuum() {
-            fetch('/start-vacuum', { method: 'POST' })
-                .then(response => {
-                    if (response.ok) {
-                        alert("Vacuum Cleaner Started!"); // Success alert
-                    } else {
-                        alert("Failed to start the vacuum."); // Error alert
-                    }
-                });
+        let vacuumPosition = { row: 2, col: 0 }; // Initial vacuum position
+        let directions = ['right', 'down', 'left', 'up']; // Movement direction priority
+        let currentDirectionIndex = 0; // Starting by moving right
+        let visitedCells = new Set(); // Keep track of visited cells
+        let cleanedCellsCount = 0; // Track number of cleaned cells
+        let vacuumMoving = false; // Track vacuum movement state
+        let vacuumTimeout; // To store the timeout for the vacuum movement
+
+        // Object to track how many times each cell is cleaned
+        let cellCleanCounts = {};
+
+        // Starts vacuum when button is clicked
+        document.getElementById('startVacuumButton').addEventListener('click', function() {
+            if (!vacuumMoving) {
+                vacuumMoving = true;
+                moveVacuum();
+            }
+        });
+
+        // Stops vacuum when button is clicked
+        document.getElementById('stopVacuumButton').addEventListener('click', function() {
+            vacuumMoving = false;
+            clearTimeout(vacuumTimeout); // Stop the vacuum movement
+            document.getElementById('vacuum').classList.remove('vacuum'); // Optionally, remove vacuum from the grid
+        });
+
+        let sweepCounter = 0;   // Counter for the number of sweeps
+        let totalCells = 0;     // Total number of cells in the grid (rows * columns)
+
+        // Initialize the grid (get total number of cells)
+        function initializeGrid() {
+            const rows = document.querySelectorAll('tbody tr');
+            const columns = document.querySelectorAll('tbody tr')[0].children.length;
+            totalCells = rows.length * columns;  // Total number of cells
         }
+
+        // Function to get the next valid move for the vacuum
+        function getNextMove(rows, direction, checkUncleaned = false) {
+            const { row, col } = vacuumPosition;
+            let nextRow = row;
+            let nextCol = col;
+
+            // Try moving in the current direction
+            switch (direction) {
+                case 'right': nextCol++; break;
+                case 'down': nextRow++; break;
+                case 'left': nextCol--; break;
+                case 'up': nextRow--; break;
+            }
+
+            // If the move is valid, return the new position
+            if (isValidMove(nextRow, nextCol, rows, checkUncleaned)) {
+                return { row: nextRow, col: nextCol };
+            }
+
+            return null; // Invalid move
+        }
+
+        function isValidMove(row, col, rows, checkUncleaned = false) {
+            if (row < 0 || col < 0 || row >= rows.length || col >= rows[0].children.length) return false;
+
+            const cell = rows[row].children[col];
+
+            // If checkUncleaned is true, only allow moving to uncleaned cells
+            if (checkUncleaned) {
+                return !cell.classList.contains('furniture') && !cell.classList.contains('cleaned');
+            }
+
+            return !cell.classList.contains('furniture'); // Only move to non-furniture cells if not checking for uncleaned
+        }
+
+        function moveVacuum() {
+            if (!vacuumMoving) return; // Stop if vacuum is not moving
+
+            const rows = document.querySelectorAll('tbody tr');
+            const currentCell = rows[vacuumPosition.row].children[vacuumPosition.col];
+
+            // Clean the current cell
+            const cellIdentifier = `${vacuumPosition.row}-${vacuumPosition.col}`;
+            if (!visitedCells.has(cellIdentifier)) {
+                currentCell.classList.add('cleaned'); // Mark as cleaned
+                visitedCells.add(cellIdentifier); // Mark cell as visited
+                cleanedCellsCount++;
+                document.getElementById('cleanedCount').textContent = `Cleaned Cells: ${cleanedCellsCount}`;
+
+                // Increase the count for this cell
+                if (!cellCleanCounts[cellIdentifier]) {
+                    cellCleanCounts[cellIdentifier] = 1;
+                } else {
+                    cellCleanCounts[cellIdentifier]++;
+                }
+
+                // If this cell is cleaned 5 times, stop
+                if (cellCleanCounts[cellIdentifier] > 5) {
+                    console.log(`Cell ${cellIdentifier} has been cleaned 5 times. Stopping vacuuming.`);
+                    vacuumMoving = false;
+                    clearTimeout(vacuumTimeout);
+                    return;
+                }
+            }
+
+            console.log(`Cleaning cell ${cellIdentifier}.`);
+
+            currentCell.classList.remove('vacuum'); // Remove vacuum from the current cell
+
+            // First, prioritize uncleaned cells
+            let possibleMoves = [];
+            for (let i = 0; i < directions.length; i++) {
+                const direction = directions[(currentDirectionIndex + i) % directions.length];
+                const nextMove = getNextMove(rows, direction, true); // Check for uncleaned cells first
+                if (nextMove) {
+                    possibleMoves.push({ move: nextMove, directionIndex: (currentDirectionIndex + i) % directions.length });
+                }
+            }
+
+            // If no uncleaned cells are found, pick a valid move (either random or in the current direction)
+            if (possibleMoves.length === 0) {
+                for (let i = 0; i < directions.length; i++) {
+                    const direction = directions[(currentDirectionIndex + i) % directions.length];
+                    const nextMove = getNextMove(rows, direction, false); // Check for any valid move
+                    if (nextMove) {
+                        possibleMoves.push({ move: nextMove, directionIndex: (currentDirectionIndex + i) % directions.length });
+                    }
+                }
+            }
+
+            // If there are possible moves, pick one (first valid or random choice)
+            if (possibleMoves.length > 0) {
+                const chosenMove = possibleMoves[0]; // Pick the first valid move for now
+                vacuumPosition = chosenMove.move;
+                currentDirectionIndex = chosenMove.directionIndex;
+                const nextCell = rows[vacuumPosition.row].children[vacuumPosition.col];
+                nextCell.classList.add('vacuum'); // Mark the new position as the vacuum cleaner
+
+                console.log(`Moving vacuum to row: ${vacuumPosition.row}, col: ${vacuumPosition.col}, direction: ${directions[currentDirectionIndex]}`);
+            }
+
+            // Continue moving the vacuum after a delay
+            vacuumTimeout = setTimeout(moveVacuum, 1000); // Adjust speed with delay
+        }
+
+        // Initialize grid and vacuum cleaner position
+        initializeGrid();
     </script>
 </body>
 </html>
