@@ -26,6 +26,7 @@
             text-align: center;
             background-color: white;
             transition: background-color 0.3s;
+            cursor: pointer;
         }
         .furniture {
             background-color: red;
@@ -99,7 +100,8 @@
                         <td></td>
                     </tr>
                     <tr>
-                        <td class="vacuum" id="vacuum"></td>
+                        <!-- Removed the vacuum class from the initial vacuum position -->
+                        <td></td>
                         <td></td>
                         <td class="furniture">Staircase</td>
                         <td></td>
@@ -137,7 +139,7 @@
         let cleanedCellsCount = 0; // Track number of cleaned cells
         let vacuumMoving = false; // Track vacuum movement state
         let vacuumTimeout; // To store the timeout for the vacuum movement
-        let batteryLevel = 5; // Start with 5% battery
+        let batteryLevel = 100; // Start with 5% battery
         let cellsSinceLastDepletion = 0; // Track how many cells have been cleaned since last depletion
 
         // Log of actions
@@ -155,7 +157,7 @@
         document.getElementById('stopVacuumButton').addEventListener('click', function() {
             vacuumMoving = false;
             clearTimeout(vacuumTimeout); // Stop the vacuum movement
-            document.getElementById('vacuum').classList.remove('vacuum'); // Optionally, remove vacuum from the grid
+            document.getElementById('vacuum')?.classList.remove('vacuum'); // Optionally, remove vacuum from the grid
         });
 
         // Function to log an action
@@ -206,10 +208,10 @@
 
         function moveVacuum() {
             if (!vacuumMoving || batteryLevel <= 0) return; // Stop if vacuum is not moving or battery is depleted
-
+        
             const rows = document.querySelectorAll('tbody tr');
             const currentCell = rows[vacuumPosition.row].children[vacuumPosition.col];
-
+        
             // Clean the current cell
             const cellIdentifier = `${vacuumPosition.row}-${vacuumPosition.col}`;
             if (!visitedCells.has(cellIdentifier)) {
@@ -217,22 +219,22 @@
                 visitedCells.add(cellIdentifier); // Mark cell as visited
                 cleanedCellsCount++;
                 document.getElementById('cleanedCount').textContent = `Cleaned Cells: ${cleanedCellsCount}`;
-
+        
                 // Log the cleaning action
                 logAction(`Cleaned cell at [${vacuumPosition.row}, ${vacuumPosition.col}]`);
-
+        
                 // Track cleaned cells and reduce battery for every 2 cleaned cells
                 cellsSinceLastDepletion++;
                 if (cellsSinceLastDepletion >= 2) {
                     batteryLevel--;
                     cellsSinceLastDepletion = 0;
                 }
-
+        
                 document.getElementById('batteryLevel').textContent = `Battery Level: ${batteryLevel}%`;
-
+        
                 // Log battery status
                 logAction(`Battery level decreased to ${batteryLevel}%`);
-
+        
                 if (batteryLevel === 0) {
                     alert('Battery depleted. Please recharge.');
                     logAction("Battery depleted. Please recharge.");
@@ -240,32 +242,54 @@
                     return;
                 }
             }
-
+        
             currentCell.classList.remove('vacuum'); // Remove vacuum from the current cell
-
+        
             // Find the next move
             let possibleMoves = [];
             for (let i = 0; i < directions.length; i++) {
                 const direction = directions[(currentDirectionIndex + i) % directions.length];
-                const nextMove = getNextMove(rows, direction, true); // Check for uncleaned cells first
+                const nextMove = getNextMove(rows, direction, true); // Pass true to only check uncleaned cells
                 if (nextMove) {
                     possibleMoves.push(nextMove);
                 }
             }
-
-            // Move to the next valid cell or stop if no valid moves
+        
             if (possibleMoves.length > 0) {
-                vacuumPosition = possibleMoves[0]; // Move to the first valid position
-                currentDirectionIndex = (currentDirectionIndex + 1) % directions.length; // Update direction
+                // Move vacuum to the next valid cell
+                vacuumPosition = possibleMoves[0]; // Take the first valid move
+                currentDirectionIndex = (currentDirectionIndex + 1) % directions.length; // Update direction index
                 rows[vacuumPosition.row].children[vacuumPosition.col].classList.add('vacuum');
             } else {
-                vacuumMoving = false; // Stop moving if no valid moves are available
-                logAction("No valid moves left. Vacuum stopped.");
+                // No valid move, show alert and stop vacuum
+                alert('No valid move left. Vacuum cannot move anymore.');
+                logAction('No valid move left. Vacuum cannot move anymore.');
+                vacuumMoving = false; // Stop vacuum movement
             }
-
-            // Continue moving after a delay
-            vacuumTimeout = setTimeout(moveVacuum, 500); // Adjust delay for realistic speed
+        
+            vacuumTimeout = setTimeout(moveVacuum, 1000); // Move every second
         }
+        
+
+        // Reset the vacuum cleaner when an uncleaned cell is clicked
+        document.querySelectorAll('td').forEach(cell => {
+            cell.addEventListener('click', function() {
+                const cellPosition = { 
+                    row: Array.from(cell.parentElement.parentElement.children).indexOf(cell.parentElement),
+                    col: Array.from(cell.parentElement.children).indexOf(cell)
+                };
+
+                const isUncleaned = !cell.classList.contains('furniture') && !cell.classList.contains('cleaned');
+                if (isUncleaned) {
+                    vacuumMoving = false; // Stop current movement
+                    vacuumPosition = cellPosition; // Reset vacuum position
+                    cell.classList.add('vacuum'); // Add vacuum to clicked position
+                    cellsSinceLastDepletion = 0; // Reset cell count
+                    logAction(`Restarting vacuum from cell [${cellPosition.row}, ${cellPosition.col}]`);
+                    moveVacuum(); // Start vacuum from new position
+                }
+            });
+        });
     </script>
 </body>
 </html>
