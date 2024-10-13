@@ -1,0 +1,66 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Vacuum Cleaner - Never Stops</title>
+    <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css">
+    <link rel="stylesheet" href="/css/vacuum-cleaner.css">
+</head>
+<body>
+    <div class="container mt-4">
+        <h1>Vacuum Cleaner - Never Stops</h1>
+        <div class="row">
+            <div class="col">
+        <button id="startVacuumButton" class="btn btn-primary">Start Vacuum</button>
+            </div>
+        <div class="col">
+        <button id="stopVacuumButton" class="btn btn-danger">Stop Vacuum</button>
+        </div>
+        </div>
+        <div class="grid">
+            <table class="table table-bordered">
+                <tbody>
+                    <tr>
+                        <td class="furniture">Furniture</td>
+                        <td></td>
+                        <td></td>
+                        <td class="furniture">Furniture</td>
+                        <td></td>
+                    </tr>
+                    <tr>
+                        <td></td>
+                        <td></td>
+                        <td></td>
+                        <td></td>
+                        <td></td>
+                    </tr>
+                    <tr>
+                        <td class="vacuum" id="vacuum"></td>
+                        <td></td>
+                        <td class="furniture">Furniture</td>
+                        <td></td>
+                        <td></td>
+                    </tr>
+                    <tr>
+                        <td></td>
+                        <td></td>
+                        <td></td>
+                        <td></td>
+                        <td></td>
+                    </tr>
+                    <tr>
+                        <td></td>
+                        <td></td>
+                        <td></td>
+                        <td></td>
+                        <td></td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+        <div id="cleanedCount">Cleaned Cells: 0</div>
+    </div>
+    <script src="/js/vacuum-cleaner.js"></script>
+</body>
+</html>

@@ -1,0 +1,48 @@
+body {
+    background-color: #f8f9fa;
+}
+h1 {
+    text-align: center;
+    margin-top: 20px;
+}
+.grid {
+    max-width: 500px;
+    margin: 20px auto;
+}
+.table {
+    table-layout: fixed;
+}
+td {
+    width: 60px;
+    height: 60px;
+    text-align: center;
+    background-color: white;
+    transition: background-color 0.3s;
+}
+.furniture {
+    background-color: red;
+    color: white;
+}
+.vacuum {
+    background-color: blue;
+    color: white;
+}
+.cleaned {
+    background-color: green;
+}
+#startVacuumButton {
+    display: block;
+    margin: 20px auto;
+}
+#stopVacuumButton {
+    display: block;
+    margin: 10px auto;
+    background-color: red;
+    color: white;
+}
+#cleanedCount {
+    text-align: center;
+    margin-top: 20px;
+    font-size: 20px;
+    font-weight: bold;
+}
