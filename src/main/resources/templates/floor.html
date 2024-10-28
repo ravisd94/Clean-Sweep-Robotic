@@ -171,7 +171,7 @@
             document.getElementById('vacuum')?.classList.remove('vacuum'); // Optionally, remove vacuum from the grid
         });
 
-        document.getElementById('startVacuumButton').addEventListener('click', function() {
+        document.getElementById('emptyVacuumButton').addEventListener('click', function() {
            dirtCapacity=100;
            logAction(`Vaccum bag is cleaned.`);
            document.getElementById('dirtCapacity').textContent = `Dirt Capacity: ${dirtCapacity}%`;
