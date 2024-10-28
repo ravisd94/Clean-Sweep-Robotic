@@ -39,6 +39,9 @@
         .cleaned {
             background-color: green;
         }
+        .dirt {
+            background-color: gray;
+        }
         #startVacuumButton {
             display: block;
             margin: 20px auto;
@@ -109,10 +112,10 @@
                     </tr>
                     <tr>
                         <td></td>
+                        <td class="dirt">Extra Dirt</td>
                         <td></td>
                         <td></td>
-                        <td></td>
-                        <td></td>
+                        <td class="dirt">Extra Dirt</td>
                     </tr>
                     <tr>
                         <td></td>
@@ -139,9 +142,9 @@
         let cleanedCellsCount = 0; // Track number of cleaned cells
         let vacuumMoving = false; // Track vacuum movement state
         let vacuumTimeout; // To store the timeout for the vacuum movement
-        let batteryLevel = 100; // Start with 5% battery
+        let batteryLevel = 100; // Start with 100% battery
         let cellsSinceLastDepletion = 0; // Track how many cells have been cleaned since last depletion
-
+        let isCleaningGray = false; // Flag to track if cleaning a gray cell
         // Log of actions
         let actionLog = [];
 
@@ -206,15 +209,40 @@
             return !cell.classList.contains('furniture'); // Only move to non-furniture cells if not checking for uncleaned
         }
 
-        function moveVacuum() {
+        async function changeDirtToClean(currentCell) {
+            for (let i = 0; i < 4; i++) {
+                console.log(i);
+                if (i === 1) {
+                    currentCell.style.backgroundColor = 'lightgray'; // First iteration: light gray
+                } else if (i === 2) {
+                    currentCell.style.backgroundColor = 'white'; // Second iteration: white
+                } else if (i === 3) {
+                    currentCell.style.backgroundColor = 'green'; // Third iteration: green
+                    currentCell.classList.remove('dirt'); // Remove 'dirt' class
+                    currentCell.textContent = ''; // Clear the text content
+                }
+                // Wait for 500 milliseconds before the next iteration
+                await new Promise(resolve => setTimeout(resolve, 500));
+            }
+            // Optional: Remove 'dirt' class again or perform other actions after loop
+            // currentCell.classList.remove('dirt'); // Uncomment if necessary
+        }
+        
+        async function moveVacuum() {
             if (!vacuumMoving || batteryLevel <= 0) return; // Stop if vacuum is not moving or battery is depleted
         
             const rows = document.querySelectorAll('tbody tr');
             const currentCell = rows[vacuumPosition.row].children[vacuumPosition.col];
         
-            // Clean the current cell
             const cellIdentifier = `${vacuumPosition.row}-${vacuumPosition.col}`;
+            
             if (!visitedCells.has(cellIdentifier)) {
+                if (currentCell.textContent === 'Extra Dirt') {
+                    // Call the function to change the dirt state
+                    await changeDirtToClean(currentCell);
+                }
+                
+                // Mark the cell as cleaned after dirt is handled
                 currentCell.classList.add('cleaned'); // Mark as cleaned
                 visitedCells.add(cellIdentifier); // Mark cell as visited
                 cleanedCellsCount++;
@@ -269,6 +297,28 @@
         
             vacuumTimeout = setTimeout(moveVacuum, 1000); // Move every second
         }
+        
+        
+        
+        
+        // Function to clean the cell three times
+        function cleanCellThreeTimes(cell) {
+        const colors = ['gray', 'yellow', 'white', 'green']; // Colors to cycle through
+        let count = 0;
+
+        return new Promise((resolve) => {
+            function changeColor() {
+                if (count < colors.length) {
+                    cell.style.backgroundColor = colors[count]; // Change color
+                    count++;
+                    setTimeout(changeColor, 500); // Wait 500 ms before next color
+                } else {
+                    resolve(); // Resolve Promise once all colors are applied
+                }
+            }
+            changeColor(); // Start the color-changing process
+        });
+    }
         
 
         // Reset the vacuum cleaner when an uncleaned cell is clicked
