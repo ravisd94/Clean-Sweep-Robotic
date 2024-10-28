@@ -48,9 +48,11 @@
         }
         #stopVacuumButton {
             display: block;
-            margin: 10px auto;
-            background-color: red;
-            color: white;
+            margin: 20px auto;
+        }
+        #emptyVacuumButton{
+            display: block;
+            margin: 20px auto;
         }
         #cleanedCount {
             text-align: center;
@@ -83,8 +85,11 @@
 <body>
     <div class="container mt-4">
         <h1>Vacuum Cleaner - Log of Actions</h1>
+        <div class="row">
         <button id="startVacuumButton" class="btn btn-primary">Start Vacuum</button>
         <button id="stopVacuumButton" class="btn btn-danger">Stop Vacuum</button>
+        <button id="emptyVacuumButton" class="btn btn-outline-success">Empty Vacuum</button>
+        </div>
         <div class="grid">
             <table class="table table-bordered">
                 <tbody>
@@ -164,6 +169,12 @@
             vacuumMoving = false;
             clearTimeout(vacuumTimeout); // Stop the vacuum movement
             document.getElementById('vacuum')?.classList.remove('vacuum'); // Optionally, remove vacuum from the grid
+        });
+
+        document.getElementById('startVacuumButton').addEventListener('click', function() {
+           dirtCapacity=100;
+           logAction(`Vaccum bag is cleaned.`);
+           document.getElementById('dirtCapacity').textContent = `Dirt Capacity: ${dirtCapacity}%`;
         });
 
         // Function to log an action
