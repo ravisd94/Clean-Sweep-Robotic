@@ -128,7 +128,8 @@
             </table>
         </div>
         <div id="cleanedCount">Cleaned Cells: 0</div>
-        <div id="batteryLevel">Battery Level: 5%</div>
+        <div id="batteryLevel">Battery Level: 100%</div>
+        <div id="dirtCapacity">Dirt Capacity: 50%</div> 
         <div id="logContainer">
             <div id="logEntries"></div>
         </div>
@@ -145,6 +146,8 @@
         let batteryLevel = 100; // Start with 100% battery
         let cellsSinceLastDepletion = 0; // Track how many cells have been cleaned since last depletion
         let isCleaningGray = false; // Flag to track if cleaning a gray cell
+        
+        let dirtCapacity = 100; // Maximum dirt capacity
         // Log of actions
         let actionLog = [];
 
@@ -221,6 +224,11 @@
                     currentCell.classList.remove('dirt'); // Remove 'dirt' class
                     currentCell.textContent = ''; // Clear the text content
                 }
+                cellsSinceLastDepletion++;
+                dirtCapacity--;
+                document.getElementById('dirtCapacity').textContent = `Dirt Capacity: ${dirtCapacity}%`;
+                logAction(`Cleaning dirt at ${vacuumPosition.row}, ${vacuumPosition.col} - (${i}), times`);
+                logAction(`Collecting dirt at ${vacuumPosition.row}, ${vacuumPosition.col} - (${i}), times`);
                 // Wait for 500 milliseconds before the next iteration
                 await new Promise(resolve => setTimeout(resolve, 500));
             }
@@ -246,26 +254,35 @@
                 currentCell.classList.add('cleaned'); // Mark as cleaned
                 visitedCells.add(cellIdentifier); // Mark cell as visited
                 cleanedCellsCount++;
+                dirtCapacity--;
                 document.getElementById('cleanedCount').textContent = `Cleaned Cells: ${cleanedCellsCount}`;
         
                 // Log the cleaning action
                 logAction(`Cleaned cell at [${vacuumPosition.row}, ${vacuumPosition.col}]`);
-        
+                logAction(`Collecting dirt at [${vacuumPosition.row}, ${vacuumPosition.col}]`);
                 // Track cleaned cells and reduce battery for every 2 cleaned cells
                 cellsSinceLastDepletion++;
                 if (cellsSinceLastDepletion >= 2) {
                     batteryLevel--;
                     cellsSinceLastDepletion = 0;
                 }
+                
         
                 document.getElementById('batteryLevel').textContent = `Battery Level: ${batteryLevel}%`;
-        
+                document.getElementById('dirtCapacity').textContent = `Dirt Capacity: ${dirtCapacity}%`;
                 // Log battery status
                 logAction(`Battery level decreased to ${batteryLevel}%`);
         
                 if (batteryLevel === 0) {
                     alert('Battery depleted. Please recharge.');
                     logAction("Battery depleted. Please recharge.");
+                    vacuumMoving = false;
+                    return;
+                }
+
+                if(dirtCapacity === 0){
+                    alert('Dirt Capacity is full. Please remove the bag.');
+                    logAction("Dirt Capacity is full. Please remove the bag.");
                     vacuumMoving = false;
                     return;
                 }
