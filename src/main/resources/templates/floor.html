@@ -42,15 +42,7 @@
         .dirt {
             background-color: gray;
         }
-        #startVacuumButton {
-            display: block;
-            margin: 20px auto;
-        }
-        #stopVacuumButton {
-            display: block;
-            margin: 20px auto;
-        }
-        #emptyVacuumButton{
+        #startVacuumButton,#stopVacuumButton,#emptyVacuumButton, #rechargeBatteryButton {
             display: block;
             margin: 20px auto;
         }
@@ -89,6 +81,7 @@
         <button id="startVacuumButton" class="btn btn-primary">Start Vacuum</button>
         <button id="stopVacuumButton" class="btn btn-danger">Stop Vacuum</button>
         <button id="emptyVacuumButton" class="btn btn-outline-success">Empty Vacuum</button>
+        <button id="rechargeBatteryButton" class="btn btn-warning">Recharge Battery</button>
         </div>
         <div class="grid">
             <table class="table table-bordered">
@@ -133,7 +126,7 @@
             </table>
         </div>
         <div id="cleanedCount">Cleaned Cells: 0</div>
-        <div id="batteryLevel">Battery Level: 100%</div>
+        <div id="batteryLevel">Battery Level: 5%</div>
         <div id="dirtCapacity">Dirt Capacity: 50%</div> 
         <div id="logContainer">
             <div id="logEntries"></div>
@@ -148,17 +141,48 @@
         let cleanedCellsCount = 0; // Track number of cleaned cells
         let vacuumMoving = false; // Track vacuum movement state
         let vacuumTimeout; // To store the timeout for the vacuum movement
-        let batteryLevel = 100; // Start with 100% battery
+        let batteryLevel = 1; // Start with 100% battery
         let cellsSinceLastDepletion = 0; // Track how many cells have been cleaned since last depletion
         let isCleaningGray = false; // Flag to track if cleaning a gray cell
         
-        let dirtCapacity = 100; // Maximum dirt capacity
+        let dirtCapacity = 10; // Maximum dirt capacity
         // Log of actions
         let actionLog = [];
 
+        let rechargeInterval; // Variable to store the interval for recharging
+
+        document.getElementById('rechargeBatteryButton').addEventListener('click', function() {
+            if (rechargeInterval) {
+                clearInterval(rechargeInterval); // Clear any existing intervals before starting a new one
+            }
+            rechargeInterval = setInterval(rechargeBattery, 1000); // Increase battery every 1 second
+        });
+
+        function rechargeBattery() {
+            if (batteryLevel < 100) {
+                batteryLevel += 10; // Increase battery level by 10%
+                if (batteryLevel > 100) batteryLevel = 100; // Cap at 100%
+                document.getElementById('batteryLevel').textContent = `Battery Level: ${batteryLevel}%`;
+                logAction(`Battery recharged to ${batteryLevel}%`);
+            } else {
+                clearInterval(rechargeInterval); // Stop recharging when battery is full
+                logAction("Battery fully charged.");
+            }
+        }
+
         // Starts vacuum when button is clicked
         document.getElementById('startVacuumButton').addEventListener('click', function() {
-            if (!vacuumMoving && batteryLevel > 0) {
+            if(batteryLevel <= 0){
+                alert('Battery depleted. Please recharge.');
+                logAction("Battery depleted. Please recharge.");
+                
+            }
+            if(dirtCapacity <= 0){
+                alert('Dirt Capacity is full. Please remove the bag.');
+                logAction("Dirt Capacity is full. Please remove the bag.");
+            }
+            
+            if (!vacuumMoving && batteryLevel > 0 && dirtCapacity > 0) {
                 vacuumMoving = true;
                 moveVacuum();
             }
